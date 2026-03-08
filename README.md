@@ -60,6 +60,50 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 
 Each result/failed record includes `request_id`, `out`, `exit_code`, and stdout/stderr for orchestration and reporting.
 
+## Install & use in OpenClaw (GitHub)
+
+### 1) Clone the repo
+
+```bash
+git clone https://github.com/ironystock/banana-claws.git
+cd banana-claws
+```
+
+### 2) Place the skill where OpenClaw can discover it
+
+Copy the `skill/` folder into your OpenClaw skills workspace (example shown below):
+
+```bash
+mkdir -p ~/.openclaw/workspace/skills/banana-claws
+cp -R skill/* ~/.openclaw/workspace/skills/banana-claws/
+```
+
+### 3) Set required environment variable
+
+```bash
+export OPENROUTER_API_KEY="your_openrouter_api_key"
+```
+
+### 4) Refresh/restart agent runtime so skills are re-indexed
+
+If the running agent session does not see the skill yet, restart/reload your OpenClaw runtime/session and verify the new skill is discoverable.
+
+### 5) Prompt examples that should trigger this skill
+
+- "Generate a cyberpunk poster concept image with neon blue lighting."
+- "Create 4 thumbnail variants in queue mode and attach results when done."
+- "Make a mascot concept art set and return a consolidated completion with all files."
+
+### 6) What users should provide in prompts
+
+For best results, include:
+
+- subject (what image to generate)
+- style/aesthetic (e.g., cinematic, pixel art, flat vector)
+- text requirements (exact words if text must appear)
+- output intent (single image vs batched variants)
+- constraints (format, dimensions, size cap)
+
 ## Project docs
 
 - Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
