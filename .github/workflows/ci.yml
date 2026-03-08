@@ -30,3 +30,8 @@ jobs:
           python skill/scripts/enqueue_image_job.py --help
           python skill/scripts/enqueue_variants.py --help
           python skill/scripts/run_image_queue.py --help
+          python skill/scripts/queue_and_return.py --help
+          python skill/scripts/summarize_request.py --help
+
+      - name: Async contract check
+        run: python tests/test_async_contract.py

@@ -16,6 +16,8 @@ def main() -> int:
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--base-dir', default=str(pathlib.Path(__file__).resolve().parents[1]))
     p.add_argument('--max-jobs', type=int, default=0, help='0 means no limit')
+    p.add_argument('--request-id', default='', help='Only process jobs matching this request id')
+    p.add_argument('--handoff-mode', choices=['background', 'foreground'], default='foreground')
     args = p.parse_args()
 
     queue_dir = pathlib.Path(args.queue_dir)
@@ -45,8 +47,14 @@ def main() -> int:
             continue
 
         job = json.loads(proc_file.read_text())
+        if args.request_id and job.get('request_id') != args.request_id:
+            # Return unrelated jobs back to pending untouched.
+            job_file_back = pending / proc_file.name
+            proc_file.rename(job_file_back)
+            continue
         job['status'] = 'processing'
         job['started_at_ms'] = _now_ms()
+        job['handoff_mode'] = args.handoff_mode
         proc_file.write_text(json.dumps(job, ensure_ascii=False, indent=2) + '\n')
 
         response_json_path = results / (proc_file.stem + '.provider-response.json')
@@ -114,6 +122,8 @@ def main() -> int:
 
         if response_json_path.exists():
             job['provider_response_path'] = str(response_json_path)
+
+        job['same_turn_drain_detected'] = args.handoff_mode == 'foreground'
 
         if cp.returncode == 0:
             job['status'] = 'succeeded'
