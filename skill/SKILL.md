@@ -1,6 +1,6 @@
 ---
 name: banana-claws
-description: Generate images via OpenRouter API (text-to-image) with a local script and queue-first workflow. Use when users ask to create images, posters, thumbnails, illustrations, concept art, or batched image variants from prompts.
+description: Generate images via OpenRouter API (text-to-image) with automation-ready local scripts and a queue-first workflow. Use for single images or batched variants (posters, thumbnails, illustrations, concept art), especially when agents must acknowledge quickly, process asynchronously, and return consolidated file attachments with structured success/failure records.
 ---
 
 # OpenRouter Image Generation

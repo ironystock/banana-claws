@@ -1,6 +1,6 @@
 # banana-claws
 
-Public OpenClaw skill for OpenRouter image generation with a queue-first workflow.
+`banana-claws` is a public OpenClaw skill and script toolkit for OpenRouter image generation, designed for both autonomous agents and human builders. It supports fast single-image generation, queue-first batch workflows, and machine-readable result artifacts so orchestration systems can acknowledge quickly, process in background, and return consolidated attached outputs.
 
 ## What this includes
 
