@@ -14,6 +14,11 @@ def main() -> int:
     p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--clarify-hints', action='store_true')
     p.add_argument('--strict-clarify', action='store_true')
+    p.add_argument('--baseline-image', default='')
+    p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
+    p.add_argument('--must-keep', action='append', default=[])
+    p.add_argument('--lock-palette', action='store_true')
+    p.add_argument('--lock-composition', action='store_true')
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--request-id', default='')
     args = p.parse_args()
@@ -33,6 +38,11 @@ def main() -> int:
         'image_size': args.image_size,
         'clarify_hints': args.clarify_hints,
         'strict_clarify': args.strict_clarify,
+        'baseline_image': args.baseline_image,
+        'variation_strength': args.variation_strength,
+        'must_keep': args.must_keep,
+        'lock_palette': args.lock_palette,
+        'lock_composition': args.lock_composition,
         'request_id': args.request_id,
         'status': 'queued',
     }

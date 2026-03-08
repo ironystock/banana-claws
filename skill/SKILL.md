@@ -35,6 +35,12 @@ Optional args:
 --image-size low|medium|high
 --clarify-hints      # print prompt-quality hints to stderr
 --strict-clarify     # fail fast when prompt appears underspecified
+--baseline-image ./path/to/reference.png
+--variation-strength low|medium|high
+--must-keep "title placement"
+--must-keep "logo mark"
+--lock-palette
+--lock-composition
 ```
 
 ## Queue -> response pattern (avoid traffic jams)
@@ -75,6 +81,12 @@ Batch-enqueue N variants with consistent file names:
 python3 {baseDir}/scripts/enqueue_variants.py \
   --prompt "A minimalist snow crab logo" \
   --count 4 \
+  --baseline-image ./generated/base-logo.png \
+  --variation-strength low \
+  --lock-palette \
+  --lock-composition \
+  --must-keep "wordmark placement" \
+  --must-keep "icon silhouette" \
   --out-dir ./generated \
   --prefix crab-logo \
   --request-id "discord-<message-id>"
@@ -98,3 +110,4 @@ Useful options:
 - For queue mode, read results from:
   - `.../imagegen-queue/results/*.json` (success)
   - `.../imagegen-queue/failed/*.json` (failure details)
+- `enqueue_variants.py` writes `<prefix>-manifest.json` with baseline, constraints, variant deltas, and output targets for reproducible reruns.

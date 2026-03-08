@@ -47,6 +47,12 @@ Queue 4 variants:
 python3 skill/scripts/enqueue_variants.py \
   --prompt "YouTube thumbnail: Snowcrab AI — Queue Mode Test, neon cyberpunk" \
   --count 4 \
+  --baseline-image ./generated/base-thumbnail.png \
+  --variation-strength low \
+  --lock-palette \
+  --lock-composition \
+  --must-keep "title placement" \
+  --must-keep "logo region" \
   --image-size low \
   --clarify-hints \
   --out-dir ./generated \
@@ -69,6 +75,13 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 
 - Add `--clarify-hints` to print actionable prompt-quality hints (style, size/format, exact text, composition constraints).
 - Add `--strict-clarify` to fail early when prompt appears underspecified.
+
+### Baseline-locked variants (on-rails)
+
+- Use `--baseline-image` for true image-to-image varianting.
+- Use `--variation-strength low|medium|high` to control divergence from baseline.
+- Use `--lock-palette`, `--lock-composition`, and repeatable `--must-keep` constraints for consistency.
+- `enqueue_variants.py` writes a `<prefix>-manifest.json` file for reproducible reruns/debugging.
 
 ## Queue/result contract
 
