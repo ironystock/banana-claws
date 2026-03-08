@@ -89,7 +89,7 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 - Success records: `generated/imagegen-queue/results/*.json`
 - Failure records: `generated/imagegen-queue/failed/*.json`
 
-Each result/failed record includes `request_id`, `out`, `exit_code`, and stdout/stderr for orchestration and reporting.
+Each result/failed record includes `request_id`, `out`, `exit_code`, stdout/stderr, and persisted provider metadata (including top-level generation id and provider response payload/path) for orchestration and edit/debug workflows.
 
 Messaging behavior note:
 - For multi-image requests, send an immediate queued ack, then a consolidated completion status update.
