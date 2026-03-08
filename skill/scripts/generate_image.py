@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import sys
+from typing import List
 
 import requests
 
@@ -29,6 +30,40 @@ def _needs_clarification(prompt: str) -> list[str]:
     return hints
 
 
+def _read_baseline_as_data_url(path_or_url: str) -> str:
+    if path_or_url.startswith('http://') or path_or_url.startswith('https://'):
+        return path_or_url
+
+    p = pathlib.Path(path_or_url)
+    if not p.exists():
+        raise FileNotFoundError(f'Baseline image not found: {path_or_url}')
+
+    mime = 'image/png'
+    suffix = p.suffix.lower()
+    if suffix in ('.jpg', '.jpeg'):
+        mime = 'image/jpeg'
+    elif suffix == '.webp':
+        mime = 'image/webp'
+
+    b = p.read_bytes()
+    return f'data:{mime};base64,' + base64.b64encode(b).decode('ascii')
+
+
+def _build_variant_constraint_text(args: argparse.Namespace) -> str:
+    lines: List[str] = []
+    if args.baseline_image:
+        lines.append('Use the provided baseline image as the primary composition anchor.')
+    if args.variation_strength:
+        lines.append(f'Variation strength: {args.variation_strength}.')
+    if args.lock_palette:
+        lines.append('Lock color palette close to baseline.')
+    if args.lock_composition:
+        lines.append('Lock composition/layout close to baseline.')
+    if args.must_keep:
+        lines.append('Must-keep elements: ' + '; '.join(args.must_keep))
+    return '\n'.join(lines)
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument('--prompt', required=True)
@@ -37,6 +72,11 @@ def main() -> int:
     p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='', help='Model-dependent quality/size tier for iterative vs final passes')
     p.add_argument('--clarify-hints', action='store_true', help='Print prompt-clarification hints before generation')
     p.add_argument('--strict-clarify', action='store_true', help='Fail fast if prompt appears ambiguous for production-style tasks')
+    p.add_argument('--baseline-image', default='', help='Path/URL to baseline image for locked variants')
+    p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
+    p.add_argument('--must-keep', action='append', default=[], help='Repeatable constraint for required elements')
+    p.add_argument('--lock-palette', action='store_true')
+    p.add_argument('--lock-composition', action='store_true')
     args = p.parse_args()
 
     key = os.getenv('OPENROUTER_API_KEY')
@@ -56,10 +96,27 @@ def main() -> int:
         return 3
 
     url = 'https://openrouter.ai/api/v1/chat/completions'
+
+    extra_constraints = _build_variant_constraint_text(args)
+    final_prompt = args.prompt if not extra_constraints else f"{args.prompt}\n\n{extra_constraints}"
+
+    if args.baseline_image:
+        try:
+            img_url = _read_baseline_as_data_url(args.baseline_image)
+        except Exception as e:
+            print(str(e), file=sys.stderr)
+            return 2
+        content = [
+            {'type': 'text', 'text': final_prompt},
+            {'type': 'image_url', 'image_url': {'url': img_url}},
+        ]
+    else:
+        content = final_prompt
+
     payload = {
         'model': args.model,
         'messages': [
-            {'role': 'user', 'content': args.prompt}
+            {'role': 'user', 'content': content}
         ],
         'modalities': ['image', 'text'],
     }

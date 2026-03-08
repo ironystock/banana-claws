@@ -65,6 +65,16 @@ def main() -> int:
             cmd.append('--clarify-hints')
         if job.get('strict_clarify'):
             cmd.append('--strict-clarify')
+        if job.get('baseline_image'):
+            cmd.extend(['--baseline-image', job['baseline_image']])
+        if job.get('variation_strength'):
+            cmd.extend(['--variation-strength', job['variation_strength']])
+        for mk in (job.get('must_keep') or []):
+            cmd.extend(['--must-keep', mk])
+        if job.get('lock_palette'):
+            cmd.append('--lock-palette')
+        if job.get('lock_composition'):
+            cmd.append('--lock-composition')
 
         cp = subprocess.run(cmd, capture_output=True, text=True)
         job['finished_at_ms'] = _now_ms()

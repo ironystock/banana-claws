@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import pathlib
 import subprocess
 import sys
+import time
 
 
 def main() -> int:
@@ -16,6 +18,11 @@ def main() -> int:
     p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--clarify-hints', action='store_true')
     p.add_argument('--strict-clarify', action='store_true')
+    p.add_argument('--baseline-image', default='')
+    p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
+    p.add_argument('--must-keep', action='append', default=[])
+    p.add_argument('--lock-palette', action='store_true')
+    p.add_argument('--lock-composition', action='store_true')
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--request-id', default='')
     p.add_argument('--start-index', type=int, default=1)
@@ -34,6 +41,18 @@ def main() -> int:
         return 2
 
     enqueued = 0
+    manifest = {
+        'created_at_ms': int(time.time() * 1000),
+        'request_id': args.request_id,
+        'baseline_image': args.baseline_image,
+        'variation_strength': args.variation_strength,
+        'must_keep': args.must_keep,
+        'lock_palette': args.lock_palette,
+        'lock_composition': args.lock_composition,
+        'image_size': args.image_size,
+        'variants': [],
+    }
+
     for i in range(args.start_index, args.start_index + args.count):
         out_path = out_dir / f"{args.prefix}-{i:02d}.{args.ext.lstrip('.')}"
         prompt = f"{args.prompt}\n\nVariant {i}. Keep composition distinct from other variants."
@@ -57,13 +76,36 @@ def main() -> int:
             cmd.append('--clarify-hints')
         if args.strict_clarify:
             cmd.append('--strict-clarify')
+        if args.baseline_image:
+            cmd.extend(['--baseline-image', args.baseline_image])
+        if args.variation_strength:
+            cmd.extend(['--variation-strength', args.variation_strength])
+        for mk in args.must_keep:
+            cmd.extend(['--must-keep', mk])
+        if args.lock_palette:
+            cmd.append('--lock-palette')
+        if args.lock_composition:
+            cmd.append('--lock-composition')
+
         cp = subprocess.run(cmd, capture_output=True, text=True)
         if cp.returncode != 0:
             print(cp.stderr.strip() or cp.stdout.strip(), file=sys.stderr)
             return cp.returncode
+
+        job_info = json.loads((cp.stdout or '{}').strip())
+        manifest['variants'].append({
+            'variant_index': i,
+            'job_id': job_info.get('job_id'),
+            'job_path': job_info.get('job_path'),
+            'out': str(out_path),
+        })
         enqueued += 1
 
+    manifest_path = out_dir / f"{args.prefix}-manifest.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+
     print(f'Enqueued {enqueued} jobs to {args.queue_dir}')
+    print(str(manifest_path))
     return 0
 
 
