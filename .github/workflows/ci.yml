@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m py_compile skill/scripts/*.py
+
+      - name: CLI smoke checks
+        run: |
+          python skill/scripts/generate_image.py --help
+          python skill/scripts/enqueue_image_job.py --help
+          python skill/scripts/enqueue_variants.py --help
+          python skill/scripts/run_image_queue.py --help

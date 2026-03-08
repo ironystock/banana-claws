@@ -1,6 +1,6 @@
 ---
-name: openrouter-imagegen
-description: Generate images via OpenRouter API (text-to-image) with a local script. Use when users ask to create images, posters, thumbnails, illustrations, or concept art from prompts.
+name: banana-claws
+description: Generate images via OpenRouter API (text-to-image) with a local script and queue-first workflow. Use when users ask to create images, posters, thumbnails, illustrations, concept art, or batched image variants from prompts.
 ---
 
 # OpenRouter Image Generation

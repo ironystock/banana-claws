@@ -1,4 +1,4 @@
-# openrouter-imagegen-skill
+# banana-claws
 
 Public OpenClaw skill for OpenRouter image generation with a queue-first workflow.
 
