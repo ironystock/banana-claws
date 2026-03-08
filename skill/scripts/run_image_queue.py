@@ -100,6 +100,11 @@ def main() -> int:
             job['provider_model'] = parsed.get('provider_model')
             job['provider_created'] = parsed.get('provider_created')
             job['provider_usage'] = parsed.get('provider_usage')
+            job['edit_intent_detected'] = parsed.get('edit_intent_detected')
+            job['baseline_applied'] = parsed.get('baseline_applied')
+            job['baseline_source'] = parsed.get('baseline_source')
+            job['rails_applied'] = parsed.get('rails_applied')
+            job['clarify_hints'] = parsed.get('clarify_hints')
             if parsed.get('provider_response') is not None:
                 job['provider_response'] = parsed.get('provider_response')
 
