@@ -36,13 +36,15 @@ Optional args:
 ## Queue -> response pattern (avoid traffic jams)
 
 When a user asks for multiple images/iterations, do **not** hold one long-running turn per image.
+Do not block waiting for a "single message with all files" if the adapter does not support it.
 Use a queue + batched response flow:
 
 1. Enqueue each requested image quickly.
 2. **Immediately return** with a short "queued" acknowledgement (do not wait for generation in the same turn).
 3. Drain queue in background (preferred: sub-agent/session worker).
-4. Send one consolidated completion response when done.
-5. **Always attach generated image files in the completion response.** Never send only paths.
+4. Send one consolidated completion status response when done.
+5. **Always attach generated image files** (never send only paths).
+6. If the messaging adapter allows only one media per send, post attachments as reply-chain messages under the consolidated completion status message (one file per message).
 
 Enqueue command:
 

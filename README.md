@@ -60,6 +60,11 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 
 Each result/failed record includes `request_id`, `out`, `exit_code`, and stdout/stderr for orchestration and reporting.
 
+Messaging behavior note:
+- For multi-image requests, send an immediate queued ack, then a consolidated completion status update.
+- Always attach generated files (never path-only).
+- If your message adapter only supports one attachment per send, post file attachments as replies under the completion status message.
+
 ## Install & use in OpenClaw (GitHub)
 
 ### 1) Clone the repo
