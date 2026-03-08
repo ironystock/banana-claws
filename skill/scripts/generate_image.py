@@ -110,6 +110,7 @@ def main() -> int:
     p.add_argument('--clarify-hints', action='store_true', help='Print prompt-clarification hints before generation')
     p.add_argument('--strict-clarify', action='store_true', help='Fail fast if prompt appears ambiguous for production-style tasks')
     p.add_argument('--baseline-image', default='', help='Path/URL to baseline image for locked variants')
+    p.add_argument('--baseline-source-kind', choices=['current_attachment', 'reply_attachment', 'explicit_path_or_url'], default='', help='How baseline was resolved by caller')
     p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--must-keep', action='append', default=[], help='Repeatable constraint for required elements')
     p.add_argument('--lock-palette', action='store_true')
@@ -141,8 +142,11 @@ def main() -> int:
 
     edit_intent_detected = _detect_edit_intent(args.prompt)
     if edit_intent_detected and args.require_baseline_for_edit_intent and not args.baseline_image:
-        print('Edit/variant intent detected but no baseline image was provided. Supply --baseline-image or override with --allow-no-baseline-on-edit-intent.', file=sys.stderr)
+        print('Edit/variant intent detected but no baseline image was provided. Resolve baseline using policy: current attachment > replied-message attachment > clarify request.', file=sys.stderr)
         return 4
+
+    if args.baseline_image and not args.baseline_source_kind:
+        args.baseline_source_kind = 'explicit_path_or_url'
 
     args, rails_applied = _apply_baseline_rails(args)
 
@@ -230,6 +234,8 @@ def main() -> int:
         'edit_intent_detected': edit_intent_detected,
         'baseline_applied': bool(args.baseline_image),
         'baseline_source': args.baseline_image or '',
+        'baseline_source_kind': args.baseline_source_kind or '',
+        'baseline_resolution_policy': 'current_attachment>reply_attachment>clarify',
         'rails_applied': rails_applied,
         'clarify_hints': clarify,
     }

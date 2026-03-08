@@ -19,6 +19,7 @@ def main() -> int:
     p.add_argument('--clarify-hints', action='store_true')
     p.add_argument('--strict-clarify', action='store_true')
     p.add_argument('--baseline-image', default='')
+    p.add_argument('--baseline-source-kind', choices=['current_attachment', 'reply_attachment', 'explicit_path_or_url'], default='')
     p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--must-keep', action='append', default=[])
     p.add_argument('--lock-palette', action='store_true')
@@ -45,6 +46,7 @@ def main() -> int:
         'created_at_ms': int(time.time() * 1000),
         'request_id': args.request_id,
         'baseline_image': args.baseline_image,
+        'baseline_source_kind': args.baseline_source_kind,
         'variation_strength': args.variation_strength,
         'must_keep': args.must_keep,
         'lock_palette': args.lock_palette,
@@ -78,6 +80,8 @@ def main() -> int:
             cmd.append('--strict-clarify')
         if args.baseline_image:
             cmd.extend(['--baseline-image', args.baseline_image])
+        if args.baseline_source_kind:
+            cmd.extend(['--baseline-source-kind', args.baseline_source_kind])
         if args.variation_strength:
             cmd.extend(['--variation-strength', args.variation_strength])
         for mk in args.must_keep:

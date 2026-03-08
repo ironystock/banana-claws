@@ -15,6 +15,7 @@ def main() -> int:
     p.add_argument('--clarify-hints', action='store_true')
     p.add_argument('--strict-clarify', action='store_true')
     p.add_argument('--baseline-image', default='')
+    p.add_argument('--baseline-source-kind', choices=['current_attachment', 'reply_attachment', 'explicit_path_or_url'], default='')
     p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--must-keep', action='append', default=[])
     p.add_argument('--lock-palette', action='store_true')
@@ -39,6 +40,7 @@ def main() -> int:
         'clarify_hints': args.clarify_hints,
         'strict_clarify': args.strict_clarify,
         'baseline_image': args.baseline_image,
+        'baseline_source_kind': args.baseline_source_kind,
         'variation_strength': args.variation_strength,
         'must_keep': args.must_keep,
         'lock_palette': args.lock_palette,

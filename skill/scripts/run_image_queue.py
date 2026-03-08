@@ -72,6 +72,8 @@ def main() -> int:
             cmd.append('--strict-clarify')
         if job.get('baseline_image'):
             cmd.extend(['--baseline-image', job['baseline_image']])
+        if job.get('baseline_source_kind'):
+            cmd.extend(['--baseline-source-kind', job['baseline_source_kind']])
         if job.get('variation_strength'):
             cmd.extend(['--variation-strength', job['variation_strength']])
         for mk in (job.get('must_keep') or []):
@@ -103,6 +105,8 @@ def main() -> int:
             job['edit_intent_detected'] = parsed.get('edit_intent_detected')
             job['baseline_applied'] = parsed.get('baseline_applied')
             job['baseline_source'] = parsed.get('baseline_source')
+            job['baseline_source_kind'] = parsed.get('baseline_source_kind')
+            job['baseline_resolution_policy'] = parsed.get('baseline_resolution_policy')
             job['rails_applied'] = parsed.get('rails_applied')
             job['clarify_hints'] = parsed.get('clarify_hints')
             if parsed.get('provider_response') is not None:
