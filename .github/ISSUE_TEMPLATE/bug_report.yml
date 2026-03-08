@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a bug in banana-claws skill/scripts
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Clear description of the bug and expected behavior.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version/commit
+      placeholder: e.g. main@1b5f62b
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run ...
+        2. Use prompt ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stderr
+      render: shell
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: OS, Python version, model, queue mode/single mode
