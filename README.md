@@ -32,6 +32,8 @@ Generate one image:
 python3 skill/scripts/generate_image.py \
   --prompt "A cinematic portrait of a cyberpunk crab" \
   --model google/gemini-3.1-flash-image-preview \
+  --image-size low \
+  --clarify-hints \
   --out ./generated/cyber-crab.png
 ```
 
@@ -41,6 +43,8 @@ Queue 4 variants:
 python3 skill/scripts/enqueue_variants.py \
   --prompt "YouTube thumbnail: Snowcrab AI — Queue Mode Test, neon cyberpunk" \
   --count 4 \
+  --image-size low \
+  --clarify-hints \
   --out-dir ./generated \
   --prefix snowcrab-queue-test \
   --request-id "discord-<message-id>"
@@ -51,6 +55,16 @@ Process queue:
 ```bash
 python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 ```
+
+### Iteration vs final quality
+
+- Use `--image-size low` for fast/low-cost exploratory passes.
+- Use `--image-size medium` or `--image-size high` for final-quality outputs.
+
+### Prompt clarity hints
+
+- Add `--clarify-hints` to print actionable prompt-quality hints (style, size/format, exact text, composition constraints).
+- Add `--strict-clarify` to fail early when prompt appears underspecified.
 
 ## Queue/result contract
 

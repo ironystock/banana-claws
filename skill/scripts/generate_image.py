@@ -4,15 +4,39 @@ import base64
 import json
 import os
 import pathlib
+import re
 import sys
+
 import requests
 
 
-def main():
+def _needs_clarification(prompt: str) -> list[str]:
+    text = prompt.lower()
+    hints: list[str] = []
+
+    if not re.search(r"\b(\d{3,4}x\d{3,4}|thumbnail|banner|poster|icon|avatar|wallpaper|og|social)\b", text):
+        hints.append("Output format/size is unclear. Add target like 'thumbnail 1280x720' or 'OG 1280x640'.")
+
+    if not re.search(r"\b(cinematic|pixel|8-bit|vector|realistic|anime|watercolor|cyberpunk|minimal|gritty|retro|flat)\b", text):
+        hints.append("Style is unclear. Add style keywords (e.g., cinematic, pixel-art, flat vector).")
+
+    if re.search(r"\b(text|title|headline|logo|wordmark)\b", text) and not re.search(r"['\"“”][^'\"“”]{2,}['\"“”]", prompt):
+        hints.append("Text rendering requested but exact copy is missing. Put required text in quotes.")
+
+    if not re.search(r"\b(high contrast|readable|legible|safe area|centered|negative space)\b", text):
+        hints.append("Composition constraints are vague. Consider adding readability/composition constraints.")
+
+    return hints
+
+
+def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument('--prompt', required=True)
     p.add_argument('--out', required=True)
     p.add_argument('--model', default='openai/gpt-5-image')
+    p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='', help='Model-dependent quality/size tier for iterative vs final passes')
+    p.add_argument('--clarify-hints', action='store_true', help='Print prompt-clarification hints before generation')
+    p.add_argument('--strict-clarify', action='store_true', help='Fail fast if prompt appears ambiguous for production-style tasks')
     args = p.parse_args()
 
     key = os.getenv('OPENROUTER_API_KEY')
@@ -20,9 +44,18 @@ def main():
         print('OPENROUTER_API_KEY is not set', file=sys.stderr)
         return 2
 
+    clarify = _needs_clarification(args.prompt)
+    if args.clarify_hints and clarify:
+        for h in clarify:
+            print(f'CLARIFY_HINT: {h}', file=sys.stderr)
+
+    if args.strict_clarify and clarify:
+        print('Prompt requires clarification before generation:', file=sys.stderr)
+        for h in clarify:
+            print(f'- {h}', file=sys.stderr)
+        return 3
+
     url = 'https://openrouter.ai/api/v1/chat/completions'
-    # OpenRouter image generation uses chat completions + modalities
-    # (per docs: /guides/overview/multimodal/image-generation)
     payload = {
         'model': args.model,
         'messages': [
@@ -30,6 +63,9 @@ def main():
         ],
         'modalities': ['image', 'text'],
     }
+    if args.image_size:
+        payload['image_size'] = args.image_size
+
     headers = {
         'Authorization': f'Bearer {key}',
         'Content-Type': 'application/json',
@@ -58,10 +94,6 @@ def main():
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    # common shapes:
-    # {"image_url": {"url": "data:image/png;base64,..."}}
-    # {"imageUrl": {"url": "..."}}
-    # {"url": "https://..."}
     data_url = None
     if isinstance(first, dict):
         if isinstance(first.get('image_url'), dict):

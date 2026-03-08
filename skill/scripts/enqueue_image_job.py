@@ -11,6 +11,9 @@ def main() -> int:
     p.add_argument('--prompt', required=True)
     p.add_argument('--out', required=True)
     p.add_argument('--model', default='google/gemini-3.1-flash-image-preview')
+    p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='')
+    p.add_argument('--clarify-hints', action='store_true')
+    p.add_argument('--strict-clarify', action='store_true')
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--request-id', default='')
     args = p.parse_args()
@@ -27,6 +30,9 @@ def main() -> int:
         'prompt': args.prompt,
         'out': args.out,
         'model': args.model,
+        'image_size': args.image_size,
+        'clarify_hints': args.clarify_hints,
+        'strict_clarify': args.strict_clarify,
         'request_id': args.request_id,
         'status': 'queued',
     }
