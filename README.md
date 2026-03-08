@@ -1,5 +1,7 @@
 # banana-claws
 
+[![CI](https://github.com/ironystock/banana-claws/actions/workflows/ci.yml/badge.svg)](https://github.com/ironystock/banana-claws/actions/workflows/ci.yml)
+
 `banana-claws` is a public OpenClaw skill and script toolkit for OpenRouter image generation, designed for both autonomous agents and human builders. It supports fast single-image generation, queue-first batch workflows, and machine-readable result artifacts so orchestration systems can acknowledge quickly, process in background, and return consolidated attached outputs.
 
 ## What this includes
@@ -57,6 +59,11 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 - Failure records: `generated/imagegen-queue/failed/*.json`
 
 Each result/failed record includes `request_id`, `out`, `exit_code`, and stdout/stderr for orchestration and reporting.
+
+## Project docs
+
+- Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Release notes: [`CHANGELOG.md`](./CHANGELOG.md)
 
 ## Publishing notes
 
