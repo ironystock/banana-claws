@@ -49,6 +49,11 @@ Optional args:
 
 When a user asks for multiple images/iterations, do **not** hold one long-running turn per image.
 Do not block waiting for a "single message with all files" if the adapter does not support it.
+
+**Hard contract for queue mode:**
+- NEVER run `run_image_queue.py` in the same foreground turn as enqueue for multi-image requests.
+- ALWAYS enqueue + immediate queued ack first, then background handoff.
+
 Use a queue + batched response flow:
 
 1. Enqueue each requested image quickly.
@@ -70,7 +75,19 @@ python3 {baseDir}/scripts/enqueue_image_job.py \
   --request-id "discord-<message-id>"
 ```
 
-Drain queue command:
+Background queue handoff (recommended):
+
+```bash
+python3 {baseDir}/scripts/queue_and_return.py \
+  --prompt "A minimalist snow crab logo" \
+  --count 4 \
+  --request-id "discord-<message-id>" \
+  --out-dir ./generated \
+  --prefix crab-logo \
+  --queue-dir ./generated/imagegen-queue
+```
+
+Manual drain command (worker context only; not same foreground turn):
 
 ```bash
 python3 {baseDir}/scripts/run_image_queue.py \
@@ -117,4 +134,5 @@ Useful options:
 - Pass `--baseline-source-kind current_attachment|reply_attachment|explicit_path_or_url` for auditable provenance.
 - When baseline is supplied, rails default to low-variation + locked palette/composition unless explicitly changed.
 - Queue results persist provider metadata (generation id + provider response payload/path) and drift diagnostics (`edit_intent_detected`, `baseline_applied`, `baseline_source`, `baseline_source_kind`, `baseline_resolution_policy`, `rails_applied`) to help edits/debugging and smarter agent continuation.
+- Queue worker writes `handoff_mode` + `same_turn_drain_detected` so you can enforce true async behavior in tests/ops.
 - `enqueue_variants.py` writes `<prefix>-manifest.json` with baseline, constraints, variant deltas, and output targets for reproducible reruns.

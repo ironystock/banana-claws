@@ -15,6 +15,8 @@
 - `skill/scripts/enqueue_image_job.py` — enqueue one job
 - `skill/scripts/enqueue_variants.py` — enqueue N variants with consistent naming
 - `skill/scripts/run_image_queue.py` — drain queue and write success/failure job records
+- `skill/scripts/queue_and_return.py` — enqueue + immediate return + background worker handoff
+- `skill/scripts/summarize_request.py` — summarize request completion/attachments for push reporting
 
 ## Requirements
 
@@ -41,13 +43,14 @@ python3 skill/scripts/generate_image.py \
   --out ./generated/cyber-crab.png
 ```
 
-Queue 4 variants:
+Queue 4 variants with async handoff (recommended):
 
 ```bash
-python3 skill/scripts/enqueue_variants.py \
+python3 skill/scripts/queue_and_return.py \
   --prompt "YouTube thumbnail: Snowcrab AI — Queue Mode Test, neon cyberpunk" \
   --count 4 \
   --baseline-image ./generated/base-thumbnail.png \
+  --baseline-source-kind explicit_path_or_url \
   --variation-strength low \
   --lock-palette \
   --lock-composition \
@@ -57,13 +60,14 @@ python3 skill/scripts/enqueue_variants.py \
   --clarify-hints \
   --out-dir ./generated \
   --prefix snowcrab-queue-test \
-  --request-id "discord-<message-id>"
+  --request-id "discord-<message-id>" \
+  --queue-dir ./generated/imagegen-queue
 ```
 
-Process queue:
+Manual worker drain (worker context only):
 
 ```bash
-python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
+python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue --request-id "discord-<message-id>" --handoff-mode background
 ```
 
 ### Iteration vs final quality
@@ -99,6 +103,7 @@ Drift diagnostics are also persisted per job (`edit_intent_detected`, `baseline_
 
 Messaging behavior note:
 - For multi-image requests, send an immediate queued ack, then a consolidated completion status update.
+- **Do not run queue drain in the same foreground turn** for multi-image requests.
 - Always attach generated files (never path-only).
 - If your message adapter only supports one attachment per send, post file attachments as replies under the completion status message.
 
