@@ -8,6 +8,35 @@
 
 `banana-claws` is a public OpenClaw skill and script toolkit for OpenRouter image generation, designed for both autonomous agents and human builders. It supports fast single-image generation, queue-first batch workflows, and machine-readable result artifacts so orchestration systems can acknowledge quickly, process in background, and return consolidated attached outputs.
 
+## Fast install (copy/paste for agents)
+
+If you are instructing another OpenClaw agent, use this instruction block verbatim:
+
+```text
+Install the OpenClaw skill `banana-claws` from:
+https://github.com/ironystock/banana-claws
+
+Steps:
+1) Clone repo
+2) Copy `skill/` contents into ~/.openclaw/workspace/skills/banana-claws/
+3) Ensure OPENROUTER_API_KEY is set in runtime env
+4) Restart/reload agent runtime so skills are re-indexed
+5) Verify skill discovery, then run a queue-mode smoke test with attached outputs
+```
+
+Recommended smoke-test prompt for the agent:
+
+```text
+Use banana-claws to generate 2 variants of "neon cyberpunk crab logo" in queue mode.
+Acknowledge queued immediately, then return a consolidated completion status and attach outputs.
+```
+
+## Best install path for external agents
+
+- **Preferred:** install from GitHub repo source (`skill/` directory), not from release zip.
+- **Why:** agents reliably understand repo URL + folder copy instructions; zip handling varies across runtimes/tools.
+- **If using release zip anyway:** extract it first, then manually copy `skill/` into the OpenClaw skills directory.
+
 ## What this includes
 
 - `skill/SKILL.md` — skill instructions + queue/response pattern
