@@ -23,6 +23,7 @@ Generate images from prompts using OpenRouter's image generation endpoint.
 python3 {baseDir}/scripts/generate_image.py \
   --prompt "A cinematic portrait of a cyberpunk crab" \
   --model google/gemini-3.1-flash-image-preview \
+  --image-size low \
   --out ./generated/cyber-crab.png
 ```
 
@@ -31,6 +32,9 @@ Optional args:
 ```bash
 --model openai/gpt-5-image
 --model openai/gpt-5-image-mini
+--image-size low|medium|high
+--clarify-hints      # print prompt-quality hints to stderr
+--strict-clarify     # fail fast when prompt appears underspecified
 ```
 
 ## Queue -> response pattern (avoid traffic jams)
@@ -52,6 +56,8 @@ Enqueue command:
 python3 {baseDir}/scripts/enqueue_image_job.py \
   --prompt "A retro 80s crab poster" \
   --model google/gemini-3.1-flash-image-preview \
+  --image-size low \
+  --clarify-hints \
   --out ./generated/crab-01.png \
   --request-id "discord-<message-id>"
 ```
@@ -84,6 +90,8 @@ Useful options:
 ## Notes
 
 - If generation fails due to model/provider mismatch, retry with `--model openai/gpt-5-image-mini`.
+- For iterative work, prefer `--image-size low`; switch to `medium` or `high` for final renders.
+- Use `--clarify-hints` to surface prompt-quality gaps early; use `--strict-clarify` for workflows that must fail on ambiguity.
 - Keep prompts explicit for text rendering tasks.
 - Save outputs into workspace paths, not `/tmp`, for durability.
 - When user asks for generated images in chat, attach the generated file in the response (do not only send a path).

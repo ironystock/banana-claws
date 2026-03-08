@@ -13,6 +13,9 @@ def main() -> int:
     p.add_argument('--prefix', default='image')
     p.add_argument('--ext', default='png')
     p.add_argument('--model', default='google/gemini-3.1-flash-image-preview')
+    p.add_argument('--image-size', choices=['low', 'medium', 'high'], default='')
+    p.add_argument('--clarify-hints', action='store_true')
+    p.add_argument('--strict-clarify', action='store_true')
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--request-id', default='')
     p.add_argument('--start-index', type=int, default=1)
@@ -48,6 +51,12 @@ def main() -> int:
             '--request-id',
             args.request_id,
         ]
+        if args.image_size:
+            cmd.extend(['--image-size', args.image_size])
+        if args.clarify_hints:
+            cmd.append('--clarify-hints')
+        if args.strict_clarify:
+            cmd.append('--strict-clarify')
         cp = subprocess.run(cmd, capture_output=True, text=True)
         if cp.returncode != 0:
             print(cp.stderr.strip() or cp.stdout.strip(), file=sys.stderr)

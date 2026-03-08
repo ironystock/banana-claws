@@ -59,6 +59,12 @@ def main() -> int:
             '--model',
             job.get('model') or 'google/gemini-3.1-flash-image-preview',
         ]
+        if job.get('image_size'):
+            cmd.extend(['--image-size', job['image_size']])
+        if job.get('clarify_hints'):
+            cmd.append('--clarify-hints')
+        if job.get('strict_clarify'):
+            cmd.append('--strict-clarify')
 
         cp = subprocess.run(cmd, capture_output=True, text=True)
         job['finished_at_ms'] = _now_ms()
