@@ -110,4 +110,5 @@ Useful options:
 - For queue mode, read results from:
   - `.../imagegen-queue/results/*.json` (success)
   - `.../imagegen-queue/failed/*.json` (failure details)
+- Queue results persist provider metadata (generation id + provider response payload/path) to help edits/debugging and smarter agent continuation.
 - `enqueue_variants.py` writes `<prefix>-manifest.json` with baseline, constraints, variant deltas, and output targets for reproducible reruns.

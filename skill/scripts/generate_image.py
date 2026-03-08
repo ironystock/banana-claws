@@ -6,7 +6,7 @@ import os
 import pathlib
 import re
 import sys
-from typing import List
+from typing import Any, List
 
 import requests
 
@@ -64,6 +64,19 @@ def _build_variant_constraint_text(args: argparse.Namespace) -> str:
     return '\n'.join(lines)
 
 
+def _extract_image_data_url(first: Any) -> str | None:
+    if not isinstance(first, dict):
+        return None
+    data_url = None
+    if isinstance(first.get('image_url'), dict):
+        data_url = first['image_url'].get('url')
+    if not data_url and isinstance(first.get('imageUrl'), dict):
+        data_url = first['imageUrl'].get('url')
+    if not data_url:
+        data_url = first.get('url')
+    return data_url
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument('--prompt', required=True)
@@ -77,6 +90,8 @@ def main() -> int:
     p.add_argument('--must-keep', action='append', default=[], help='Repeatable constraint for required elements')
     p.add_argument('--lock-palette', action='store_true')
     p.add_argument('--lock-composition', action='store_true')
+    p.add_argument('--output-format', choices=['path', 'json'], default='path')
+    p.add_argument('--save-response-json', default='', help='Optional path to write full provider response JSON')
     args = p.parse_args()
 
     key = os.getenv('OPENROUTER_API_KEY')
@@ -95,8 +110,6 @@ def main() -> int:
             print(f'- {h}', file=sys.stderr)
         return 3
 
-    url = 'https://openrouter.ai/api/v1/chat/completions'
-
     extra_constraints = _build_variant_constraint_text(args)
     final_prompt = args.prompt if not extra_constraints else f"{args.prompt}\n\n{extra_constraints}"
 
@@ -106,18 +119,16 @@ def main() -> int:
         except Exception as e:
             print(str(e), file=sys.stderr)
             return 2
-        content = [
+        content: Any = [
             {'type': 'text', 'text': final_prompt},
             {'type': 'image_url', 'image_url': {'url': img_url}},
         ]
     else:
         content = final_prompt
 
-    payload = {
+    payload: dict[str, Any] = {
         'model': args.model,
-        'messages': [
-            {'role': 'user', 'content': content}
-        ],
+        'messages': [{'role': 'user', 'content': content}],
         'modalities': ['image', 'text'],
     }
     if args.image_size:
@@ -128,12 +139,18 @@ def main() -> int:
         'Content-Type': 'application/json',
     }
 
-    r = requests.post(url, headers=headers, data=json.dumps(payload), timeout=180)
+    r = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(payload), timeout=180)
     if r.status_code >= 300:
         print(f'Generation failed: {r.status_code} {r.text[:500]}', file=sys.stderr)
         return 1
 
     data = r.json()
+
+    if args.save_response_json:
+        save_path = pathlib.Path(args.save_response_json)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        save_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+
     choices = data.get('choices') or []
     if not choices:
         print('No choices returned', file=sys.stderr)
@@ -148,21 +165,13 @@ def main() -> int:
         return 1
 
     first = images[0]
-    out = pathlib.Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-
-    data_url = None
-    if isinstance(first, dict):
-        if isinstance(first.get('image_url'), dict):
-            data_url = first['image_url'].get('url')
-        if not data_url and isinstance(first.get('imageUrl'), dict):
-            data_url = first['imageUrl'].get('url')
-        if not data_url:
-            data_url = first.get('url')
-
+    data_url = _extract_image_data_url(first)
     if not data_url:
         print('Unsupported image payload shape', file=sys.stderr)
         return 1
+
+    out = pathlib.Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
 
     if data_url.startswith('data:image') and 'base64,' in data_url:
         b64 = data_url.split('base64,', 1)[1]
@@ -175,7 +184,20 @@ def main() -> int:
         print('Unknown image URL format', file=sys.stderr)
         return 1
 
-    print(str(out))
+    result = {
+        'out': str(out),
+        'provider_generation_id': data.get('id'),
+        'provider_model': data.get('model'),
+        'provider_created': data.get('created'),
+        'provider_usage': data.get('usage'),
+        'provider_response': data,
+    }
+
+    if args.output_format == 'json':
+        print(json.dumps(result, ensure_ascii=False))
+    else:
+        print(str(out))
+
     return 0
 
 

@@ -49,6 +49,7 @@ def main() -> int:
         job['started_at_ms'] = _now_ms()
         proc_file.write_text(json.dumps(job, ensure_ascii=False, indent=2) + '\n')
 
+        response_json_path = results / (proc_file.stem + '.provider-response.json')
         cmd = [
             sys.executable,
             str(gen_script),
@@ -58,6 +59,10 @@ def main() -> int:
             job['out'],
             '--model',
             job.get('model') or 'google/gemini-3.1-flash-image-preview',
+            '--output-format',
+            'json',
+            '--save-response-json',
+            str(response_json_path),
         ]
         if job.get('image_size'):
             cmd.extend(['--image-size', job['image_size']])
@@ -81,6 +86,25 @@ def main() -> int:
         job['exit_code'] = cp.returncode
         job['stdout'] = (cp.stdout or '').strip()
         job['stderr'] = (cp.stderr or '').strip()
+
+        parsed = None
+        if cp.stdout:
+            try:
+                parsed = json.loads(cp.stdout.strip())
+            except Exception:
+                parsed = None
+
+        if isinstance(parsed, dict):
+            job['generator_result'] = parsed
+            job['provider_generation_id'] = parsed.get('provider_generation_id')
+            job['provider_model'] = parsed.get('provider_model')
+            job['provider_created'] = parsed.get('provider_created')
+            job['provider_usage'] = parsed.get('provider_usage')
+            if parsed.get('provider_response') is not None:
+                job['provider_response'] = parsed.get('provider_response')
+
+        if response_json_path.exists():
+            job['provider_response_path'] = str(response_json_path)
 
         if cp.returncode == 0:
             job['status'] = 'succeeded'
