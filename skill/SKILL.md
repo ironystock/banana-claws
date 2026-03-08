@@ -36,11 +36,13 @@ Optional args:
 --clarify-hints      # print prompt-quality hints to stderr
 --strict-clarify     # fail fast when prompt appears underspecified
 --baseline-image ./path/to/reference.png
+--baseline-source-kind current_attachment|reply_attachment|explicit_path_or_url
 --variation-strength low|medium|high
 --must-keep "title placement"
 --must-keep "logo mark"
 --lock-palette
 --lock-composition
+--allow-no-baseline-on-edit-intent
 ```
 
 ## Queue -> response pattern (avoid traffic jams)
@@ -110,5 +112,9 @@ Useful options:
 - For queue mode, read results from:
   - `.../imagegen-queue/results/*.json` (success)
   - `.../imagegen-queue/failed/*.json` (failure details)
-- Queue results persist provider metadata (generation id + provider response payload/path) to help edits/debugging and smarter agent continuation.
+- Edit/variant intent prompts fail fast if no baseline is supplied (`--baseline-image`) unless explicitly overridden.
+- Resolve baseline deterministically in caller: current-message attachment > replied-message attachment > clarification request.
+- Pass `--baseline-source-kind current_attachment|reply_attachment|explicit_path_or_url` for auditable provenance.
+- When baseline is supplied, rails default to low-variation + locked palette/composition unless explicitly changed.
+- Queue results persist provider metadata (generation id + provider response payload/path) and drift diagnostics (`edit_intent_detected`, `baseline_applied`, `baseline_source`, `baseline_source_kind`, `baseline_resolution_policy`, `rails_applied`) to help edits/debugging and smarter agent continuation.
 - `enqueue_variants.py` writes `<prefix>-manifest.json` with baseline, constraints, variant deltas, and output targets for reproducible reruns.

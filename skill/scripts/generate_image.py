@@ -49,6 +49,30 @@ def _read_baseline_as_data_url(path_or_url: str) -> str:
     return f'data:{mime};base64,' + base64.b64encode(b).decode('ascii')
 
 
+def _detect_edit_intent(prompt: str) -> bool:
+    text = prompt.lower()
+    patterns = [
+        r"\b(edit|modify|revise|iterate|variant|variation|based on|from this|use this|same but|keep same|preserve)\b",
+        r"\b(attached|attachment|reference image|foundational image|baseline image)\b",
+    ]
+    return any(re.search(p, text) for p in patterns)
+
+
+def _apply_baseline_rails(args: argparse.Namespace) -> tuple[argparse.Namespace, list[str]]:
+    applied: list[str] = []
+    if args.baseline_image:
+        if not args.variation_strength:
+            args.variation_strength = 'low'
+            applied.append('variation_strength=low')
+        if not args.lock_palette:
+            args.lock_palette = True
+            applied.append('lock_palette=true')
+        if not args.lock_composition:
+            args.lock_composition = True
+            applied.append('lock_composition=true')
+    return args, applied
+
+
 def _build_variant_constraint_text(args: argparse.Namespace) -> str:
     lines: List[str] = []
     if args.baseline_image:
@@ -86,18 +110,24 @@ def main() -> int:
     p.add_argument('--clarify-hints', action='store_true', help='Print prompt-clarification hints before generation')
     p.add_argument('--strict-clarify', action='store_true', help='Fail fast if prompt appears ambiguous for production-style tasks')
     p.add_argument('--baseline-image', default='', help='Path/URL to baseline image for locked variants')
+    p.add_argument('--baseline-source-kind', choices=['current_attachment', 'reply_attachment', 'explicit_path_or_url'], default='', help='How baseline was resolved by caller')
     p.add_argument('--variation-strength', choices=['low', 'medium', 'high'], default='')
     p.add_argument('--must-keep', action='append', default=[], help='Repeatable constraint for required elements')
     p.add_argument('--lock-palette', action='store_true')
     p.add_argument('--lock-composition', action='store_true')
     p.add_argument('--output-format', choices=['path', 'json'], default='path')
     p.add_argument('--save-response-json', default='', help='Optional path to write full provider response JSON')
+    p.add_argument('--require-baseline-for-edit-intent', action='store_true', default=True)
+    p.add_argument('--allow-no-baseline-on-edit-intent', action='store_true', help='Disable fail-fast baseline requirement for edit-like prompts')
     args = p.parse_args()
 
     key = os.getenv('OPENROUTER_API_KEY')
     if not key:
         print('OPENROUTER_API_KEY is not set', file=sys.stderr)
         return 2
+
+    if args.allow_no_baseline_on_edit_intent:
+        args.require_baseline_for_edit_intent = False
 
     clarify = _needs_clarification(args.prompt)
     if args.clarify_hints and clarify:
@@ -109,6 +139,16 @@ def main() -> int:
         for h in clarify:
             print(f'- {h}', file=sys.stderr)
         return 3
+
+    edit_intent_detected = _detect_edit_intent(args.prompt)
+    if edit_intent_detected and args.require_baseline_for_edit_intent and not args.baseline_image:
+        print('Edit/variant intent detected but no baseline image was provided. Resolve baseline using policy: current attachment > replied-message attachment > clarify request.', file=sys.stderr)
+        return 4
+
+    if args.baseline_image and not args.baseline_source_kind:
+        args.baseline_source_kind = 'explicit_path_or_url'
+
+    args, rails_applied = _apply_baseline_rails(args)
 
     extra_constraints = _build_variant_constraint_text(args)
     final_prompt = args.prompt if not extra_constraints else f"{args.prompt}\n\n{extra_constraints}"
@@ -191,6 +231,13 @@ def main() -> int:
         'provider_created': data.get('created'),
         'provider_usage': data.get('usage'),
         'provider_response': data,
+        'edit_intent_detected': edit_intent_detected,
+        'baseline_applied': bool(args.baseline_image),
+        'baseline_source': args.baseline_image or '',
+        'baseline_source_kind': args.baseline_source_kind or '',
+        'baseline_resolution_policy': 'current_attachment>reply_attachment>clarify',
+        'rails_applied': rails_applied,
+        'clarify_hints': clarify,
     }
 
     if args.output_format == 'json':

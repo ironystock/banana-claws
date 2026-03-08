@@ -79,8 +79,12 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 ### Baseline-locked variants (on-rails)
 
 - Use `--baseline-image` for true image-to-image varianting.
+- Resolve baseline deterministically in caller: **current-message attachment > replied-message attachment > clarification request**.
+- Record baseline provenance with `--baseline-source-kind current_attachment|reply_attachment|explicit_path_or_url`.
+- Edit/variant intent prompts fail fast when no baseline is provided (override only with `--allow-no-baseline-on-edit-intent`).
+- Default rails are auto-applied when baseline is present: `variation-strength=low`, `lock-palette`, `lock-composition`.
 - Use `--variation-strength low|medium|high` to control divergence from baseline.
-- Use `--lock-palette`, `--lock-composition`, and repeatable `--must-keep` constraints for consistency.
+- Use repeatable `--must-keep` constraints for consistency.
 - `enqueue_variants.py` writes a `<prefix>-manifest.json` file for reproducible reruns/debugging.
 
 ## Queue/result contract
@@ -90,6 +94,8 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue
 - Failure records: `generated/imagegen-queue/failed/*.json`
 
 Each result/failed record includes `request_id`, `out`, `exit_code`, stdout/stderr, and persisted provider metadata (including top-level generation id and provider response payload/path) for orchestration and edit/debug workflows.
+
+Drift diagnostics are also persisted per job (`edit_intent_detected`, `baseline_applied`, `baseline_source`, `baseline_source_kind`, `baseline_resolution_policy`, `rails_applied`, `clarify_hints`) so agents can prove whether baseline rails were actually used.
 
 Messaging behavior note:
 - For multi-image requests, send an immediate queued ack, then a consolidated completion status update.
