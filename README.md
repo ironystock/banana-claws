@@ -1,6 +1,10 @@
 # banana-claws
 
 [![CI](https://github.com/ironystock/banana-claws/actions/workflows/ci.yml/badge.svg)](https://github.com/ironystock/banana-claws/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ironystock/banana-claws?sort=semver)](https://github.com/ironystock/banana-claws/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/ironystock/banana-claws)](https://github.com/ironystock/banana-claws/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 `banana-claws` is a public OpenClaw skill and script toolkit for OpenRouter image generation, designed for both autonomous agents and human builders. It supports fast single-image generation, queue-first batch workflows, and machine-readable result artifacts so orchestration systems can acknowledge quickly, process in background, and return consolidated attached outputs.
 
