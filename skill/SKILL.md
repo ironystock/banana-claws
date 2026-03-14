@@ -1,6 +1,15 @@
 ---
 name: banana-claws
 description: Generate images via OpenRouter API (text-to-image) with automation-ready local scripts and a queue-first workflow. Use for single images or batched variants (posters, thumbnails, illustrations, concept art), especially when agents must acknowledge quickly, process asynchronously, and return consolidated file attachments with structured success/failure records.
+metadata:
+  {
+    "openclaw": {
+      "requires": {
+        "bins": ["python3"],
+        "env": ["OPENROUTER_API_KEY"]
+      }
+    }
+  }
 ---
 
 # OpenRouter Image Generation
@@ -11,6 +20,13 @@ Generate images from prompts using OpenRouter's image generation endpoint.
 
 - `OPENROUTER_API_KEY` in environment
 - `python3`
+- Python package: `requests`
+
+Install dependency:
+
+```bash
+python3 -m pip install requests
+```
 
 ## FTUX preflight (run first)
 
@@ -126,6 +142,12 @@ Useful options:
 --max-jobs 3   # process only a subset for controlled batches
 --start-index 5  # continue naming from prior batches
 ```
+
+## Data transmission notice (external provider)
+
+- This skill sends prompts and generated/edit inputs to OpenRouter (`openrouter.ai`).
+- If you pass `--baseline-image`, that image content is transmitted to the provider as part of the request.
+- Do not submit sensitive/private images unless the user explicitly approves external transmission.
 
 ## Notes
 

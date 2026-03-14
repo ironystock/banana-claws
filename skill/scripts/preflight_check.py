@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -26,6 +27,12 @@ def check_dir(path: Path) -> dict:
     return {"kind": "dir", "name": str(path), "required": False, "ok": exists, "detail": "exists" if exists else "missing"}
 
 
+def check_module(module_name: str) -> dict:
+    spec = importlib.util.find_spec(module_name)
+    ok = spec is not None
+    return {"kind": "python_module", "name": module_name, "required": True, "ok": ok, "detail": "installed" if ok else "missing"}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="banana-claws preflight")
     parser.add_argument("--queue-dir", default="./generated/imagegen-queue")
@@ -35,6 +42,7 @@ def main() -> int:
     checks = [
         check_env("OPENROUTER_API_KEY"),
         check_bin("python3"),
+        check_module("requests"),
         check_dir(Path(args.queue_dir)),
     ]
 
@@ -47,6 +55,8 @@ def main() -> int:
         fixups.append('export OPENROUTER_API_KEY="<your_key>"')
     if "python3" in failed:
         fixups.append("Install Python 3 and verify: python3 --version")
+    if "requests" in failed:
+        fixups.append("Install dependency: python3 -m pip install requests")
     fixups.append("mkdir -p ./generated/imagegen-queue")
     fixups.append("python3 skill/scripts/preflight_check.py --json")
 
