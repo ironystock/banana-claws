@@ -1,15 +1,9 @@
 ---
 name: banana-claws
 description: Generate images via OpenRouter API (text-to-image) with automation-ready local scripts and a queue-first workflow. Use for single images or batched variants (posters, thumbnails, illustrations, concept art), especially when agents must acknowledge quickly, process asynchronously, and return consolidated file attachments with structured success/failure records.
-metadata:
-  {
-    "openclaw": {
-      "requires": {
-        "bins": ["python3"],
-        "env": ["OPENROUTER_API_KEY"]
-      }
-    }
-  }
+homepage: https://github.com/ironystock/banana-claws
+user-invocable: true
+metadata: {"openclaw":{"emoji":"🍌","primaryEnv":"OPENROUTER_API_KEY","requires":{"bins":["python3"],"env":["OPENROUTER_API_KEY"]}}}
 ---
 
 # OpenRouter Image Generation
