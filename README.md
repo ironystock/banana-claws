@@ -52,12 +52,14 @@ Acknowledge queued immediately, then return a consolidated completion status and
 
 - Python 3.9+
 - `OPENROUTER_API_KEY` environment variable
+- Python package `requests`
 - Internet access to `https://openrouter.ai`
 
 Install Python dependency:
 
 ```bash
-pip install -r requirements.txt
+python3 -m pip install requests
+# or: pip install -r requirements.txt
 ```
 
 ## Quick start
@@ -116,6 +118,12 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue 
 
 - Add `--clarify-hints` to print actionable prompt-quality hints (style, size/format, exact text, composition constraints).
 - Add `--strict-clarify` to fail early when prompt appears underspecified.
+
+### Provider data handling note
+
+- Requests are sent to OpenRouter for generation/edit processing.
+- When using baseline/edit flags (for example `--baseline-image`), that input image is transmitted to the provider.
+- Only use images that the user has approved for external processing.
 
 ### Baseline-locked variants (on-rails)
 
