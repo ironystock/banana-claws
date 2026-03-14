@@ -62,6 +62,7 @@ Optional args:
 --strict-clarify     # fail fast when prompt appears underspecified
 --baseline-image ./path/to/reference.png
 --baseline-source-kind current_attachment|reply_attachment|explicit_path_or_url
+--confirm-external-upload # required for local baseline file upload
 --variation-strength low|medium|high
 --must-keep "title placement"
 --must-keep "logo mark"
@@ -117,6 +118,12 @@ Manual drain command (worker context only; not same foreground turn):
 ```bash
 python3 {baseDir}/scripts/run_image_queue.py \
   --queue-dir ./generated/imagegen-queue
+
+# queue_and_return guardrails (optional tuning)
+python3 {baseDir}/scripts/queue_and_return.py \
+  --max-background-workers 2 \
+  --orphan-timeout-sec 1800 \
+  ...
 ```
 
 Batch-enqueue N variants with consistent file names:
@@ -152,6 +159,8 @@ Useful options:
 ## Notes
 
 - If generation fails due to model/provider mismatch, retry with `--model openai/gpt-5-image-mini`.
+- Local baseline uploads are deny-by-default; pass `--confirm-external-upload` only when user explicitly approves sending that local file to provider.
+- Local baseline files are restricted to png/jpg/jpeg/webp, non-symlink regular files, workspace-local paths, and max size threshold.
 - For iterative work, prefer `--image-size low`; switch to `medium` or `high` for final renders.
 - Use `--clarify-hints` to surface prompt-quality gaps early; use `--strict-clarify` for workflows that must fail on ambiguity.
 - Keep prompts explicit for text rendering tasks.
