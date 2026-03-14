@@ -24,6 +24,7 @@ def main() -> int:
     p.add_argument('--must-keep', action='append', default=[])
     p.add_argument('--lock-palette', action='store_true')
     p.add_argument('--lock-composition', action='store_true')
+    p.add_argument('--confirm-external-upload', action='store_true')
     p.add_argument('--queue-dir', default='generated/imagegen-queue')
     p.add_argument('--request-id', default='')
     p.add_argument('--start-index', type=int, default=1)
@@ -51,6 +52,7 @@ def main() -> int:
         'must_keep': args.must_keep,
         'lock_palette': args.lock_palette,
         'lock_composition': args.lock_composition,
+        'confirm_external_upload': args.confirm_external_upload,
         'image_size': args.image_size,
         'variants': [],
     }
@@ -90,6 +92,8 @@ def main() -> int:
             cmd.append('--lock-palette')
         if args.lock_composition:
             cmd.append('--lock-composition')
+        if args.confirm_external_upload:
+            cmd.append('--confirm-external-upload')
 
         cp = subprocess.run(cmd, capture_output=True, text=True)
         if cp.returncode != 0:

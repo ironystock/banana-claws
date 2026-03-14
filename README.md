@@ -44,7 +44,7 @@ Acknowledge queued immediately, then return a consolidated completion status and
 - `skill/scripts/enqueue_image_job.py` — enqueue one job
 - `skill/scripts/enqueue_variants.py` — enqueue N variants with consistent naming
 - `skill/scripts/run_image_queue.py` — drain queue and write success/failure job records
-- `skill/scripts/queue_and_return.py` — enqueue + immediate return + background worker handoff
+- `skill/scripts/queue_and_return.py` — enqueue + immediate return + background worker handoff (with worker cap + orphan cleanup)
 - `skill/scripts/summarize_request.py` — summarize request completion/attachments for push reporting
 - `skill/scripts/preflight_check.py` — first-run diagnostics + copy/paste fixups
 
@@ -90,6 +90,7 @@ python3 skill/scripts/queue_and_return.py \
   --count 4 \
   --baseline-image ./generated/base-thumbnail.png \
   --baseline-source-kind explicit_path_or_url \
+  --confirm-external-upload \
   --variation-strength low \
   --lock-palette \
   --lock-composition \
@@ -109,6 +110,14 @@ Manual worker drain (worker context only):
 python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue --request-id "discord-<message-id>" --handoff-mode background
 ```
 
+Background hardening knobs:
+
+```bash
+python3 skill/scripts/queue_and_return.py ... \
+  --max-background-workers 2 \
+  --orphan-timeout-sec 1800
+```
+
 ### Iteration vs final quality
 
 - Use `--image-size low` for fast/low-cost exploratory passes.
@@ -119,11 +128,12 @@ python3 skill/scripts/run_image_queue.py --queue-dir ./generated/imagegen-queue 
 - Add `--clarify-hints` to print actionable prompt-quality hints (style, size/format, exact text, composition constraints).
 - Add `--strict-clarify` to fail early when prompt appears underspecified.
 
-### Provider data handling note
+### Provider data handling note (deny-by-default)
 
 - Requests are sent to OpenRouter for generation/edit processing.
 - When using baseline/edit flags (for example `--baseline-image`), that input image is transmitted to the provider.
-- Only use images that the user has approved for external processing.
+- Local baseline uploads are blocked unless `--confirm-external-upload` is explicitly set.
+- Only use images that the user has explicitly approved for external processing.
 
 ### Baseline-locked variants (on-rails)
 

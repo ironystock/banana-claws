@@ -7,6 +7,7 @@ import pathlib
 import re
 import sys
 from typing import Any, List
+from urllib.parse import urlparse
 
 import requests
 
@@ -30,23 +31,40 @@ def _needs_clarification(prompt: str) -> list[str]:
     return hints
 
 
-def _read_baseline_as_data_url(path_or_url: str) -> str:
+def _read_baseline_as_data_url(path_or_url: str, *, max_mb: int, allow_local: bool, require_workspace_local: bool, workspace_root: str) -> str:
     if path_or_url.startswith('http://') or path_or_url.startswith('https://'):
+        parsed = urlparse(path_or_url)
+        if parsed.scheme not in ('http', 'https'):
+            raise ValueError('Only http/https baseline URLs are allowed')
         return path_or_url
 
-    p = pathlib.Path(path_or_url)
+    if not allow_local:
+        raise ValueError('Local baseline path upload blocked. Re-run with --confirm-external-upload for local files.')
+
+    p = pathlib.Path(path_or_url).expanduser().resolve()
     if not p.exists():
         raise FileNotFoundError(f'Baseline image not found: {path_or_url}')
+    if not p.is_file() or p.is_symlink():
+        raise ValueError('Baseline must be a regular non-symlink file')
 
-    mime = 'image/png'
+    allowed = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp'}
     suffix = p.suffix.lower()
-    if suffix in ('.jpg', '.jpeg'):
-        mime = 'image/jpeg'
-    elif suffix == '.webp':
-        mime = 'image/webp'
+    if suffix not in allowed:
+        raise ValueError('Baseline extension not allowed. Use png/jpg/jpeg/webp')
+
+    if require_workspace_local:
+        root = pathlib.Path(workspace_root).expanduser().resolve()
+        try:
+            p.relative_to(root)
+        except Exception:
+            raise ValueError(f'Baseline path must be under workspace root: {root}')
+
+    size = p.stat().st_size
+    if size > max_mb * 1024 * 1024:
+        raise ValueError(f'Baseline file too large ({size} bytes), max is {max_mb}MB')
 
     b = p.read_bytes()
-    return f'data:{mime};base64,' + base64.b64encode(b).decode('ascii')
+    return f"data:{allowed[suffix]};base64," + base64.b64encode(b).decode('ascii')
 
 
 def _detect_edit_intent(prompt: str) -> bool:
@@ -119,6 +137,10 @@ def main() -> int:
     p.add_argument('--save-response-json', default='', help='Optional path to write full provider response JSON')
     p.add_argument('--require-baseline-for-edit-intent', action='store_true', default=True)
     p.add_argument('--allow-no-baseline-on-edit-intent', action='store_true', help='Disable fail-fast baseline requirement for edit-like prompts')
+    p.add_argument('--confirm-external-upload', action='store_true', help='Required to upload a local baseline file to provider')
+    p.add_argument('--max-baseline-mb', type=int, default=10, help='Maximum local baseline file size in MB')
+    p.add_argument('--require-workspace-local-baseline', action='store_true', default=True, help='Require local baseline path to be under workspace root')
+    p.add_argument('--workspace-root', default='/home/brad/.openclaw/workspace', help='Workspace root used for local baseline path safety')
     args = p.parse_args()
 
     key = os.getenv('OPENROUTER_API_KEY')
@@ -155,7 +177,13 @@ def main() -> int:
 
     if args.baseline_image:
         try:
-            img_url = _read_baseline_as_data_url(args.baseline_image)
+            img_url = _read_baseline_as_data_url(
+                args.baseline_image,
+                max_mb=args.max_baseline_mb,
+                allow_local=args.confirm_external_upload,
+                require_workspace_local=args.require_workspace_local_baseline,
+                workspace_root=args.workspace_root,
+            )
         except Exception as e:
             print(str(e), file=sys.stderr)
             return 2

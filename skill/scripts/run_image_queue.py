@@ -90,6 +90,8 @@ def main() -> int:
             cmd.append('--lock-palette')
         if job.get('lock_composition'):
             cmd.append('--lock-composition')
+        if job.get('confirm_external_upload'):
+            cmd.append('--confirm-external-upload')
 
         cp = subprocess.run(cmd, capture_output=True, text=True)
         job['finished_at_ms'] = _now_ms()
