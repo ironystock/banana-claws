@@ -46,6 +46,7 @@ Acknowledge queued immediately, then return a consolidated completion status and
 - `skill/scripts/run_image_queue.py` — drain queue and write success/failure job records
 - `skill/scripts/queue_and_return.py` — enqueue + immediate return + background worker handoff
 - `skill/scripts/summarize_request.py` — summarize request completion/attachments for push reporting
+- `skill/scripts/preflight_check.py` — first-run diagnostics + copy/paste fixups
 
 ## Requirements
 
@@ -60,6 +61,13 @@ pip install -r requirements.txt
 ```
 
 ## Quick start
+
+### 0) First-time setup check (FTUX)
+
+```bash
+python3 skill/scripts/preflight_check.py
+python3 skill/scripts/preflight_check.py --json
+```
 
 Generate one image:
 
@@ -184,6 +192,15 @@ For best results, include:
 
 - Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 - Release notes: [`CHANGELOG.md`](./CHANGELOG.md)
+
+## Agent -> user recovery prompts (copy/paste)
+
+- Missing API key:
+  - `I can generate images once OPENROUTER_API_KEY is set. Please run: export OPENROUTER_API_KEY="<your_key>" then tell me to retry.`
+- Missing Python:
+  - `I need python3 to run banana-claws scripts. Please install Python 3 and confirm 'python3 --version' works, then I’ll continue.`
+- Queue folder missing:
+  - `Queue mode needs a queue directory. Please run: mkdir -p ./generated/imagegen-queue and I’ll proceed.`
 
 ## Publishing notes
 

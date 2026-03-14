@@ -12,6 +12,15 @@ Generate images from prompts using OpenRouter's image generation endpoint.
 - `OPENROUTER_API_KEY` in environment
 - `python3`
 
+## FTUX preflight (run first)
+
+```bash
+python3 {baseDir}/scripts/preflight_check.py
+python3 {baseDir}/scripts/preflight_check.py --json
+```
+
+If checks fail, tell the user exactly what is missing and provide copy/paste fix steps from the `Fixups` output.
+
 ## Default model
 
 - `google/gemini-3.1-flash-image-preview`
